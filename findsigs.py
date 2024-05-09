@@ -131,6 +131,7 @@ else:
     F = bytearray(0 * Sz) #current file 
 
 First = True
+oldfn = ""
 
 for fn in tqdm.tqdm(Df.keys(), ncols=os.get_terminal_size().columns-4,ascii=True):
     if Quit or Hope <= 0:
@@ -148,6 +149,7 @@ for fn in tqdm.tqdm(Df.keys(), ncols=os.get_terminal_size().columns-4,ascii=True
                     break
         while Sz > 0 and M[Sz-1] == ord(b'.'): # crop the size of the checked array
             Sz -= 1
+    oldfn = fn
 
 if Quit:
     print("Program terminated.")
