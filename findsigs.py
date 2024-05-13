@@ -72,7 +72,7 @@ def signal_handling(signum,frame):
 signal.signal(signal.SIGINT,signal_handling)
 
 def DIESig(bs):
-    # creates a Detect It Easy signature from bytes
+    # creates a Detect-It-Easy signature from bytes
     s = '"'; s1 = ""
     for b in bs:
         if (0x20 <= b < 0x7F) and not (chr(b) in ["'",'"']): # if it's an ansi character (but not a quote or apostrophe)
@@ -126,9 +126,9 @@ if Hope == 0:
     print("The smallest file has zero length, aborting.")
     exit()
 else:
-    B = bytearray(0 * Sz) #buffer 
-    M = bytearray(b'x' * Sz) #match mask
-    F = bytearray(0 * Sz) #current file 
+    B = bytearray([0] * Sz) #buffer 
+    M = bytearray([1] * Sz) #match mask
+    F = bytearray([0] * Sz) #current file 
 
 First = True
 oldfn = ""
@@ -141,13 +141,13 @@ for fn in tqdm.tqdm(Df.keys(), ncols=os.get_terminal_size().columns-4,ascii=True
         B[:] = F; First = False
     else: # compare against the previous files
         for i in range(Sz):
-            if (M[i] == ord(b'x')) and (F[i] != B[i]): # If there's hope for this byte but it doesn't match
-                M[i] = ord(b'.') # mask it out
+            if M[i] and F[i] != B[i]: # If there's hope for this byte but it doesn't match
+                M[i] = 0 # mask it out
                 Hope -= 1 # and take the hope for it away
                 if Hope == 0:
                     print("No hope. Breaking off at "+fn+ "; prev. "+oldfn)
                     break
-        while Sz > 0 and M[Sz-1] == ord(b'.'): # crop the size of the checked array
+        while Sz > 0 and not M[Sz-1]: # crop the size of the checked array
             Sz -= 1
     oldfn = fn
 
@@ -159,13 +159,16 @@ elif Hope > 0:
     SusCnt = 0 # counting sigs
     AllZeroes = 0 # counting the ill-advised sigs too
     Hope = 0 # our hope - counting just the sig-like bytes here
+    # add one mismatch at the end to simplify the following algo if a signature continues until the last byte
+    Sz += 1
+    if len(B) == Sz: B.append(0); M.append(0) # not necessary if there were tailing mismatches trimmed
     for i in range(Sz):
-        if M[i] == ord(b'x'): # if it's a match
+        if M[i]: # if it's a match
             SusLen += 1 # simply add the running length for it
-        else:
+        else: # if it's not, or no longer, a match
             if SusLen >= SigAtLeast: # if the length of uninterrupted signature found thus far is over threshold...
                 Hope += SusLen # the hope byte count now includes this signature
-                Sus = B[i-SusLen:i] # apprehend the suspect
+                Sus = B[i-SusLen:i] # apprehend the suspect 
                 if sum(Sus) > 0 or AllZeroesGood: # avoiding stupid (all zeroes) results, or not
                     SusCnt += 1 # we have found a signature we can give the user
                     if base > 0:
@@ -176,9 +179,10 @@ elif Hope > 0:
                     AllZeroes += 1
             SusLen = 0 # anyway, get ready to find another sig
             B[i] = ZeroOutWith # and erase the mismatch byte in the binary 
-    o.close()
-    open("findsigs"+os.path.splitext(fn)[1]+".matches","wb").write(M[:Sz])
-    open("findsigs"+os.path.splitext(fn)[1]+".bin","wb").write(B[0:Sz])
+    o.close() # the file with signatures
+    Sz -= 1 # ignore the final dummy byte
+    open("findsigs"+os.path.splitext(fn)[1]+".matches","wb").write(b''.join([b'x' if b else b'.' for b in M[:Sz]]))
+    open("findsigs"+os.path.splitext(fn)[1]+".bin","wb").write(B[:Sz])
     print(f"  {Hope} hopes rest in {SusCnt} sequences among {len(Df)} files.",end="")
     if not AllZeroesGood and AllZeroes > 0:
         print(f" 0-sequences ignored: {AllZeroes}.")
