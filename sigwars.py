@@ -43,56 +43,56 @@ import os, sys
 
 # The default folder:
 if len(sys.argv)>1:
-    BaseDir = sys.argv[1]
+	BaseDir = sys.argv[1]
 else:
-    BaseDir = "."
+	BaseDir = "."
 # CHANGE UNTIL HERE
 
 def DIESig(bs):
-    # creates a Detect It Easy signature from bytes
-    ansimin = 2 # how many characters an ansi sequence should have for the 'text' conversion to happen
-    s = '"'; s1 = ""
-    for b in bs:
-        if (0x20 <= b < 0x7F) and not (chr(b) in ["'",'"']):
-            s1 += chr(b)
-        else:
-            if len(s1) >= ansimin:
-                s += "'"+s1+"'"
-            elif s1 != "":
-                for q in s1:
-                    s += f"{ord(q):02X}"
-            s1 = ""; s += f"{b:02X}"
-    if len(s1) >= ansimin:
-        s += "'"+s1+"'"
-    elif len(s1)>0:
-        for q in s1:
-            s += f"{ord(q):02X}"        
-    del s1; s = s.replace("''",""); s += '"'
-    return s
+	# creates a Detect It Easy signature from bytes
+	ansimin = 2 # how many characters an ansi sequence should have for the 'text' conversion to happen
+	s = '"'; s1 = ""
+	for b in bs:
+		if (0x20 <= b < 0x7F) and not (chr(b) in ["'",'"']):
+			s1 += chr(b)
+		else:
+			if len(s1) >= ansimin:
+				s += "'"+s1+"'"
+			elif s1 != "":
+				for q in s1:
+					s += f"{ord(q):02X}"
+			s1 = ""; s += f"{b:02X}"
+	if len(s1) >= ansimin:
+		s += "'"+s1+"'"
+	elif len(s1)>0:
+		for q in s1:
+			s += f"{ord(q):02X}"        
+	del s1; s = s.replace("''",""); s += '"'
+	return s
 
 L=[]
 c = 0
 for r,_,ns in os.walk(BaseDir):
-    for n in ns:
-        if Ext == "" or os.path.splitext(n)[1].lower() == Ext.lower():
-            fn = os.path.normcase(os.path.join(r,n))
-            f = open(fn,"rb")
-            f.seek(Ofs)
-            i = f.read(Sz)
-            f.close()
-            sig = DIESig(i)
-            old = False
-            for c in range(len(L)):
-                if L[c][0] == sig:
-                    old = True; break
-            if not old:
-                L.append((sig,[fn]))
-            else:
-                L[c][1].append(fn)
+	for n in ns:
+		if Ext == "" or os.path.splitext(n)[1].lower() == Ext.lower():
+			fn = os.path.normcase(os.path.join(r,n))
+			f = open(fn,"rb")
+			f.seek(Ofs)
+			i = f.read(Sz)
+			f.close()
+			sig = DIESig(i)
+			old = False
+			for c in range(len(L)):
+				if L[c][0] == sig:
+					old = True; break
+			if not old:
+				L.append((sig,[fn]))
+			else:
+				L[c][1].append(fn)
 
 o = open("sigwars"+Ext+".txt","w",encoding="utf-8-sig")
 for k,vs in L:
-    o.write(k+"\n  - ")
-    o.write(', '.join(v for v in vs))
-    o.write("\n\n")
+	o.write(k+"\n  - ")
+	o.write(', '.join(v for v in vs))
+	o.write("\n\n")
 o.close()

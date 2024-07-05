@@ -32,51 +32,51 @@ Rel = 1 # 1 if you're searching for relative pointers (the reason this script ex
 
 import sys,os.path
 if len(sys.argv) > 1:
-    if os.path.exists(sys.argv[1]):
-        FileName = sys.argv[1]
-    else:
-        print("Error: could not find "+sys.argv[1]+". Did you forget the quotes?")
-        exit(-1)
+	if os.path.exists(sys.argv[1]):
+		FileName = sys.argv[1]
+	else:
+		print("Error: could not find "+sys.argv[1]+". Did you forget the quotes?")
+		exit(-1)
 
 F = open(FileName,'rb').read()
 
 if From == -1:
-    From = Jitter #; print('Searching from file start')
+	From = Jitter #; print('Searching from file start')
 if To == -1:
-    To = len(F)-PtrSz-Jitter #; print(f'Searching to file end {len(F):08X} at {To:08X}')
+	To = len(F)-PtrSz-Jitter #; print(f'Searching to file end {len(F):08X} at {To:08X}')
 if From >= len(F)-PtrSz-Jitter: #; print("From value too big, searching from", Jitter)
-    From = Jitter
+	From = Jitter
 elif From < Jitter: #; print("From value too little, searching from", Jitter)
-    From = Jitter
+	From = Jitter
 if To > len(F)-PtrSz-Jitter:
-    To = len(F)-PtrSz-Jitter #; print("To value too big, searching from", To)
+	To = len(F)-PtrSz-Jitter #; print("To value too big, searching from", To)
 if To < From:
-    To,From = From,To #; print("To value is smaller than From, swapping")
+	To,From = From,To #; print("To value is smaller than From, swapping")
 if To-From <= Jitter*2:
-    print(f"File too small ({From=}, {To=}, {Jitter=})"); exit()
+	print(f"File too small ({From=}, {To=}, {Jitter=})"); exit()
 
 from struct import unpack
 
 def ptr2ofs(pofs):
-    # takes a suggested value from the file (from point pofs) as an offset
-    # this offset is further compared to
-    try:
-        return(unpack(Pattern,F[pofs:pofs+PtrSz])[0])
-    except Exception as e:
-        print(f"ptr2ofs error at {pofs:08X}:")
-        raise
+	# takes a suggested value from the file (from point pofs) as an offset
+	# this offset is further compared to
+	try:
+		return(unpack(Pattern,F[pofs:pofs+PtrSz])[0])
+	except Exception as e:
+		print(f"ptr2ofs error at {pofs:08X}:")
+		raise
 
 i = From
 print(f"Searching in "+FileName+"...")
 while i < To:
-    for j in range(-Jitter,Jitter+1):
-        testing = ptr2ofs(i);
-        #print(f"{i:X}{testing:+X}?",end=' ',flush=True)
-        if i*Rel+j+testing == DataAt:
-            if j == 0:
-                print(f"Found [{i:04X}]")
-            else:
-                print(f"~Found [{i:04X}]{j:+X}")
-    i += 1
+	for j in range(-Jitter,Jitter+1):
+		testing = ptr2ofs(i);
+		#print(f"{i:X}{testing:+X}?",end=' ',flush=True)
+		if i*Rel+j+testing == DataAt:
+			if j == 0:
+				print(f"Found [{i:04X}]")
+			else:
+				print(f"~Found [{i:04X}]{j:+X}")
+	i += 1
 
 input("Done. Press <Enter>")
