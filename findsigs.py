@@ -103,15 +103,14 @@ Db = {}
 base = 0
 
 for root,_,files in os.walk(BaseDir):
-  for f in files:
-	if Quit:
-		break
-	if (Ext == "") or (os.path.splitext(f)[1].lower() == Ext):
-		fn = os.path.normcase(os.path.join(root,f))
-		ofs = BaseOffset(open(fn,'rb'))
-		if ofs > 0: base = ofs
-		Df[fn] = os.stat(fn).st_size-ofs
-		Db[fn] = ofs
+	for f in files:
+		if Quit: break
+		if (Ext == "") or (os.path.splitext(f)[1].lower() == Ext):
+			fn = os.path.normcase(os.path.join(root,f))
+			ofs = BaseOffset(open(fn,'rb'))
+			if ofs > 0: base = ofs
+			Df[fn] = os.stat(fn).st_size-ofs
+			Db[fn] = ofs
 
 print(" done.")
 if len(Df) < 2:

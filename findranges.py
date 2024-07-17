@@ -132,6 +132,7 @@ mSz = sys.maxsize; MSz = -1; mItems = sys.maxsize; MItems = -1
 
 m = array.array('i',(0xFF for x in range(Sz))) #min
 M = array.array('i',(-0xFF for x in range(Sz))) #max
+hopeYet = array.array('i',(True for x in range(Sz))) #whether to even check
 V = []
 for i in range(0,Sz): V.append(set()) #possible values
 
@@ -163,11 +164,15 @@ for fn in tqdm.tqdm(Df, ncols=os.get_terminal_size().columns-4,ascii=True):
 			except Exception as e:
 				print(f" {fn}, {Items:02X} items: b = F[({BaseOfs:02X}+) {item:02X} * {Sz:02X} + {i:02X}]. Error: {str(e)}"); exit()
 			V[i].add(b) #add it to the possible values set
-			hopeYet = m[i] != 0 or M[i] != 255
+			if Signed:
+				hopeYet = m[i] != -128 or M[i] != 127
+			else:
+				hopeYet = m[i] != 0 or M[i] != 255
 			if b < m[i]: m[i] = b #update min value for the offset
 			if b > M[i]: M[i] = b #update max value
-			if hopeYet and (not Signed and m[i] == 0 and M[i] == 255 \
-				or Signed and m[i] == -128 and M[i] == 127):
+			if hopeYet and (
+				((not Signed) and m[i] == 0 and M[i] == 255)
+				or (Signed and m[i] == -128 and M[i] == 127)):
 					Hope -= 1
 		#print('') #debug
 	if Hope <= 0: print("It's all completely random, alas."); exit()
