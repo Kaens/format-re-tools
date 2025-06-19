@@ -27,7 +27,7 @@ MaxOfs = 10000000 # the max offset to look at for matches
 SigAtLeast = 2 # the minimum length of a sequence of matching bytes to make a signature from 
 AllZeroesGood = False # when the entire sig sequence is zeroes, ignore it — useful for file format detection
 ZeroOutWith = 0 # the output .bin will have this character in the positions that aren't a match
-ansimin = 2 # how many characters an ansi sequence should have for the 'text' conversion to happen in the DiE sig
+ansimin = 8 # how many characters an ansi sequence should have for the 'text' conversion to happen in the DiE sig
 def BaseOffset(file):
 	"""
 	This function will analyse each file to know what offset the matchable block starts from in each file.
@@ -160,7 +160,7 @@ elif Hope > 0:
 	Hope = 0 # our hope - counting just the sig-like bytes here
 	# add one mismatch at the end to simplify the following algo if a signature continues until the last byte
 	Sz += 1
-	if len(B) == Sz: B.append(0); M.append(0) # not necessary if there were tailing mismatches trimmed
+	B.append(0); M.append(0) # covering the off-by-1 bug
 	for i in range(Sz):
 		if M[i]: # if it's a match
 			SusLen += 1 # simply add the running length for it
